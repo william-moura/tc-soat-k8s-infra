@@ -24,6 +24,22 @@ data "aws_subnets" "default" {
   }
 }
 
+# Busca dinamicamente a AMI Ubuntu 22.04 LTS oficial da Canonical
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical (Dona oficial do Ubuntu - Permitida no AWS Academy)
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 resource "aws_security_group" "k8s_sg" {
   name_prefix        = "tc-k8s-ec2-sg"
   description = "Security Group para EC2 com K3s"
@@ -48,21 +64,6 @@ resource "aws_security_group" "k8s_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-# Busca dinamicamente a AMI Ubuntu 22.04 LTS oficial da Canonical
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical (Dona oficial do Ubuntu - Permitida no AWS Academy)
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
   }
 }
 
