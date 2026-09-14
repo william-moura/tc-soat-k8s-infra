@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: laravel
-        image: ghcr.io/SEU_USUARIO_GITHUB/tc-soat-app:latest
+        image: ghcr.io/william-moura/tech-challenge:master
         imagePullPolicy: Always
         ports:
         - containerPort: 80
