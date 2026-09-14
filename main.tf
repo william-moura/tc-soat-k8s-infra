@@ -17,7 +17,7 @@ data "aws_vpc" "default" {
 }
 
 resource "aws_security_group" "k8s_sg" {
-  name        = "tc-k8s-ec2-sg"
+  name_prefix        = "tc-k8s-ec2-sg"
   description = "Security Group para EC2 com K3s"
   vpc_id      = data.aws_vpc.default.id
 
