@@ -37,5 +37,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Aplica os manifestos Kubernetes diretamente na EC2 com K3s
-            sudo k3s kubectl apply -f https://raw.githubusercontent.com/${{ github.repository }}/main/k8s-manifests/
+            # 1. Cria/limpa uma pasta temporária na EC2
+            rm -rf ~/k8s-manifests && mkdir -p ~/k8s-manifests
+            
+            # 2. Clona o repositório ou baixa os arquivos usando o token do GitHub
+            git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ~/repo-temp
+            
+            # 3. Copia a pasta de manifestos para o diretório local
+            cp -r ~/repo-temp/k8s-manifests/* ~/k8s-manifests/
+            rm -rf ~/repo-temp
+
+            # 4. Aplica os arquivos YAML diretamente pelo caminho local no K3s
+            sudo k3s kubectl apply -f ~/k8s-manifests/
