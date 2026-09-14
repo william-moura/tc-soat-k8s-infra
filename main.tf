@@ -16,6 +16,14 @@ data "aws_vpc" "default" {
   default = true
 }
 
+# 2. Busca as Subnets Padrão da VPC existente
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
 resource "aws_security_group" "k8s_sg" {
   name_prefix        = "tc-k8s-ec2-sg"
   description = "Security Group para EC2 com K3s"
