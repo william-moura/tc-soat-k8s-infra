@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tc-app-laravel
+  labels:
+    app: tc-app-laravel
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tc-app-laravel
+  template:
+    metadata:
+      labels:
+        app: tc-app-laravel
+    spec:
+      containers:
+      - name: laravel
+        image: ghcr.io/SEU_USUARIO_GITHUB/tc-soat-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: tc-app-config
+        - secretRef:
+            name: tc-app-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tc-app-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: tc-app-laravel

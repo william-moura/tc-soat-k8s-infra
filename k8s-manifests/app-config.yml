@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tc-app-config
+data:
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  DB_CONNECTION: "mysql"
+  DB_PORT: "3306"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tc-app-secret
+type: Opaque
+stringData:
+  DB_HOST: "ENDPOINT_RDS_AQUI" # Preenchido automaticamente ou manualmente
+  DB_DATABASE: "techchallenge"
+  DB_USERNAME: "dbadmin"
+  DB_PASSWORD: "SEU_DB_PASSWORD"
+  JWT_SECRET: "SEU_JWT_SECRET"
