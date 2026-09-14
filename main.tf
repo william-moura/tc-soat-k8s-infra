@@ -9,5 +9,48 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+resource "aws_security_group" "k8s_sg" {
+  name        = "tc-k8s-ec2-sg"
+  description = "Security Group para EC2 com K3s"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "k8s_server" {
+  ami                  = "ami-0c7217cdde317cfec"
+  instance_type        = "t3.small"
+  key_name             = "vockey"
+  iam_instance_profile = "LabInstanceProfile"
+  vpc_security_group_ids = [aws_security_group.k8s_sg.id]
+
+  tags = {
+    Name = "tc-k8s-node"
+  }
 }
