@@ -29,7 +29,7 @@ resource "aws_apigatewayv2_stage" "default_stage" {
 
 # Permissão de Invocação para a Lambda
 resource "aws_lambda_permission" "api_gw_lambda_permission" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+  statement_id_prefix  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = "tc-soat-auth-lambda"
   principal     = "apigateway.amazonaws.com"
