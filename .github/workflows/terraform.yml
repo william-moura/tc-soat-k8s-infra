@@ -1,8 +1,6 @@
 name: Terraform Deploy K8s Infra
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
