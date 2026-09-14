@@ -1,46 +1,39 @@
-name: Terraform Pipeline
+name: Terraform Deploy K8s Infra
 
 on:
   push:
-    branches:
-      - main
+    branches: [ master ]
   pull_request:
-    branches:
-      - main
+    branches: [ master ]
 
 jobs:
-  terraform:
+  infra:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Código
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Configurar Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 1.5.7
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Configurar Credenciais AWS
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Necessário para AWS Academy
-        aws-region: us-east-1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
 
-    - name: Terraform Init
-      run: terraform init
+      - name: Terraform Init & Apply
+        run: |
+          terraform init
+          terraform apply -auto-approve
 
-    - name: Terraform Format & Validate
-      run: |
-        terraform fmt -check
-        terraform validate
-
-    - name: Terraform Plan
-      run: terraform plan -no-color
-      continue-on-error: false
-
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
+      - name: Deploy Manifests to K8s via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo k3s kubectl apply -f https://raw.githubusercontent.com/${{ github.repository }}/main/k8s-manifests/configmap-secrets.yaml
+            sudo k3s kubectl apply -f https://raw.githubusercontent.com/${{ github.repository }}/main/k8s-manifests/app-deployment.yaml

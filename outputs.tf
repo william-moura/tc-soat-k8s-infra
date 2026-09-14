@@ -17,3 +17,8 @@ output "private_subnets" {
   value       = module.vpc.private_subnets
   description = "IDs das subnets privadas"
 }
+
+output "api_gateway_url" {
+  value       = aws_apigatewayv2_api.auth_gw.api_endpoint
+  description = "URL do API Gateway"
+}
