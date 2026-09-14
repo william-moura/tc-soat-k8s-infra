@@ -31,7 +31,7 @@ resource "aws_apigatewayv2_stage" "default_stage" {
 resource "aws_lambda_permission" "api_gw_lambda_permission" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "techchallenge-auth-lambda"
+  function_name = "tc-soat-auth-lambda"
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.auth_gw.execution_arn}/*/*"
 }
