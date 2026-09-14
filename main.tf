@@ -50,9 +50,24 @@ resource "aws_security_group" "k8s_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+# Busca dinamicamente a AMI Ubuntu 22.04 LTS oficial da Canonical
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical (Dona oficial do Ubuntu - Permitida no AWS Academy)
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
 
 resource "aws_instance" "k8s_server" {
-  ami                  = "ami-0c7217cdde317cfec"
+  ami                  = "data.aws_ami.ubuntu.id"
   instance_type        = "t3.small"
   key_name             = "vockey"
   iam_instance_profile = "LabInstanceProfile"
