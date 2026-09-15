@@ -1,9 +1,9 @@
-# 1. Busca a VPC Padrão do AWS Academy
+# 1. Busca a VPC Padrão
 data "aws_vpc" "default" {
   default = true
 }
 
-# 2. Busca apenas Subnets localizadas em us-east-1a ou us-east-1b (onde t3.small é 100% suportado)
+# 2. Subnets filtradas para zonas compatíveis
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -12,11 +12,11 @@ data "aws_subnets" "default" {
 
   filter {
     name   = "availability-zone"
-    values = ["us-east-1a", "us-east-1b", "us-east-1c"] # Evita us-east-1e
+    values = ["us-east-1a", "us-east-1b", "us-east-1c"]
   }
 }
 
-# 3. Busca a AMI Ubuntu Oficial (Canonical)
+# 3. AMI Ubuntu Oficial Canonical
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"]
@@ -32,11 +32,11 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# 4. Instância EC2 apontando para a Subnet filtrada
+# 4. Instância EC2
 resource "aws_instance" "k8s_server" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.small"
-  subnet_id                   = data.aws_subnets.default.ids[0] # Pegará us-east-1a, 1b ou 1c
+  instance_type               = "t3.micro" # t3.micro é o padrão indiscutível aceito no Academy
+  subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
   key_name                    = "vockey"
 
@@ -49,14 +49,20 @@ resource "aws_instance" "k8s_server" {
     delete_on_termination = true
   }
 
+  # Script de inicialização seguro sem quebras
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "EC2 Started" > /tmp/status.txt
+              EOF
+
   tags = {
     Name = "tc-k8s-node"
   }
 }
 
-# 5. Security Group
+# 5. Security Group com Prefix
 resource "aws_security_group" "k8s_sg" {
-  name_prefix        = "tc-k8s-sg"
+  name_prefix = "tc-k8s-sg-"
   description = "Security Group para K3s no AWS Academy"
   vpc_id      = data.aws_vpc.default.id
 
@@ -86,5 +92,9 @@ resource "aws_security_group" "k8s_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
