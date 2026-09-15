@@ -20,9 +20,19 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
-        envFrom:
-        - configMapRef:
-            name: tc-app-config
+        env:
+        - name: DB_CONNECTION
+          value: "mysql"
+        - name: DB_HOST
+          value: "tc-mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_DATABASE
+          value: "techchallenge"
+        - name: DB_USERNAME
+          value: "root"
+        - name: DB_PASSWORD
+          value: "secretpassword"
 ---
 apiVersion: v1
 kind: Service
