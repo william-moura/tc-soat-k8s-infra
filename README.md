@@ -1,8 +1,3 @@
----
-
-### File 2: `tc-soat-k8s-infra/README.md`
-
-```markdown
 # 🚀 Tech Challenge - Infraestrutura Base Kubernetes (K3s em AWS EC2)
 
 📌 **Nota:** Este repositório é parte integrante do ecossistema **Tech Challenge**. Para conferir a visão geral da aplicação, acesse o repositório principal: [tech-challenge](https://github.com/william-moura/tech-challenge).
