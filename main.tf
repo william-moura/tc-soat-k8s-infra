@@ -3,11 +3,16 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# 2. Busca uma Subnet Padrão dentro dessa VPC
+# 2. Busca apenas Subnets localizadas em us-east-1a ou us-east-1b (onde t3.small é 100% suportado)
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = ["us-east-1a", "us-east-1b", "us-east-1c"] # Evita us-east-1e
   }
 }
 
@@ -27,21 +32,20 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# 4. Instância EC2 compatível com as regras do Learner Lab
+# 4. Instância EC2 apontando para a Subnet filtrada
 resource "aws_instance" "k8s_server" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = "t3.small"
-  subnet_id                   = data.aws_subnets.default.ids[0]
+  subnet_id                   = data.aws_subnets.default.ids[0] # Pegará us-east-1a, 1b ou 1c
   associate_public_ip_address = true
-  key_name                    = "vockey" # Key pair padrão gerada automaticamente pelo AWS Academy
+  key_name                    = "vockey"
 
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
 
-  # Configuração de disco padrão permitida no AWS Academy
   root_block_device {
     volume_size           = 20
     volume_type           = "gp2"
-    encrypted             = false # O Academy rejeita chaves de criptografia customizadas
+    encrypted             = false
     delete_on_termination = true
   }
 
