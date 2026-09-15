@@ -1,6 +1,6 @@
 # 🚀 Tech Challenge - Infraestrutura Base Kubernetes (K3s em AWS EC2)
 
-📌 **Nota:** Este repositório é parte integrante do ecossistema **Tech Challenge**. Para conferir a visão geral da aplicação, acesse o repositório principal: [tech-challenge](https://github.com/william-moura/tech-challenge).
+> 📌 **Nota:** Este repositório é parte integrante do ecossistema **Tech Challenge**. Para conferir a visão geral da aplicação, acesse o repositório principal: [tech-challenge](https://github.com/william-moura/tech-challenge).
 
 Este repositório gerencia a infraestrutura base de computação e o orquestrador Kubernetes no **AWS Academy Learner Lab** utilizando **Terraform** e **GitHub Actions**.
 
