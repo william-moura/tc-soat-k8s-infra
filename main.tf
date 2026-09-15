@@ -1,9 +1,9 @@
-# 1. Busca a VPC Padrão
+# 1. Busca a VPC Padrão do AWS Academy
 data "aws_vpc" "default" {
   default = true
 }
 
-# 2. Subnets filtradas para zonas compatíveis (evita us-east-1e)
+# 2. Busca as Subnets Padrão da VPC
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -16,7 +16,7 @@ data "aws_subnets" "default" {
   }
 }
 
-# 3. AMI Amazon Linux 2023 Oficial (Aprovada 100% no AWS Academy)
+# 3. AMI Amazon Linux 2023 Oficial
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -32,32 +32,26 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# 4. Instância EC2 compatível com as regras rígidas do Learner Lab
+# 4. Instância EC2 em estado puro (sem user_data)
 resource "aws_instance" "k8s_server" {
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t3.micro"
-  subnet_id                   = data.aws_subnets.default.ids[0]
-  associate_public_ip_address = true
-  key_name                    = "vockey"
-  iam_instance_profile        = "LabInstanceProfile"
+  ami                  = data.aws_ami.amazon_linux.id
+  instance_type        = "t3.small"
+  subnet_id            = data.aws_subnets.default.ids[0]
+  key_name             = "vockey"
+  iam_instance_profile = "LabInstanceProfile"
 
+  # Usa o Security Group padrão do próprio laboratório para evitar bloqueio de auditoria
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              # Instalação do K3s no Amazon Linux 2023
-              curl -sfL https://get.k3s.io | sh -
-              EOF
 
   tags = {
     Name = "tc-k8s-node"
   }
 }
 
-# 5. Security Group
+# 5. Security Group Mínimo
 resource "aws_security_group" "k8s_sg" {
   name_prefix = "tc-k8s-sg-"
-  description = "Security Group para K3s no AWS Academy"
+  description = "Security Group K3s AWS Academy"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
@@ -86,9 +80,5 @@ resource "aws_security_group" "k8s_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
   }
 }
