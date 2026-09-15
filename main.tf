@@ -77,9 +77,10 @@ resource "aws_security_group" "k8s_sg" {
 }
 
 # 6. EC2 Instância no AWS Academy
+# EC2 Instância no AWS Academy
 resource "aws_instance" "k8s_server" {
   ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t3.small"
+  instance_type               = "t3.micro" # OBRIGATÓRIO: t3.micro para não estourar a cota de vCPUs do Learner Lab
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
   key_name                    = "vockey"
