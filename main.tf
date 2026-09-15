@@ -3,7 +3,7 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# 2. Subnets filtradas para zonas compatíveis
+# 2. Subnets filtradas para zonas compatíveis (evita us-east-1e)
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -16,14 +16,14 @@ data "aws_subnets" "default" {
   }
 }
 
-# 3. AMI Ubuntu 22.04 LTS Homologada
-data "aws_ami" "ubuntu" {
+# 3. AMI Amazon Linux 2023 Oficial (Aprovada 100% no AWS Academy)
+data "aws_ami" "amazon_linux" {
   most_recent = true
-  owners      = ["099720109477"]
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20*"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {
@@ -32,9 +32,9 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# 4. Instância EC2 Limpa para AWS Academy
+# 4. Instância EC2 compatível com as regras rígidas do Learner Lab
 resource "aws_instance" "k8s_server" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.micro"
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
@@ -42,6 +42,12 @@ resource "aws_instance" "k8s_server" {
   iam_instance_profile        = "LabInstanceProfile"
 
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              # Instalação do K3s no Amazon Linux 2023
+              curl -sfL https://get.k3s.io | sh -
+              EOF
 
   tags = {
     Name = "tc-k8s-node"
