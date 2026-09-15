@@ -14,7 +14,7 @@ metadata:
   name: tc-app-secret
 type: Opaque
 stringData:
-  DB_HOST: "tc-db-mysql.cqxe3cv5beda.us-east-1.rds.amazonaws.com" # Preenchido automaticamente ou manualmente
+  DB_HOST: "tc-mysql-service" # Preenchido automaticamente ou manualmente
   DB_DATABASE: "techchallenge"
   DB_USERNAME: "dbadmin"
   DB_PASSWORD: "secretpassword"
