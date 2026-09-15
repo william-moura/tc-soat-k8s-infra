@@ -16,7 +16,7 @@ type: Opaque
 stringData:
   DB_HOST: "tc-mysql-service" # Preenchido automaticamente ou manualmente
   DB_DATABASE: "techchallenge"
-  DB_USERNAME: "dbadmin"
+  DB_USERNAME: "root"
   DB_PASSWORD: "secretpassword"
   JWT_SECRET: "SEU_JWT_SECRET"
   LOG_CHANNEL: "stderr"
