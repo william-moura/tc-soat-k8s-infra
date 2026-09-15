@@ -56,7 +56,7 @@ resource "aws_instance" "k8s_server" {
 
 # 5. Security Group
 resource "aws_security_group" "k8s_sg" {
-  name        = "tc-k8s-sg"
+  name_prefix        = "tc-k8s-sg"
   description = "Security Group para K3s no AWS Academy"
   vpc_id      = data.aws_vpc.default.id
 
