@@ -35,10 +35,13 @@ data "aws_ami" "ubuntu" {
 # 4. Instância EC2
 resource "aws_instance" "k8s_server" {
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.micro" # t3.micro é o padrão indiscutível aceito no Academy
+  instance_type               = "t3.micro"
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
   key_name                    = "vockey"
+  
+  # AQUI ESTÁ A CHAVE DO AWS ACADEMY:
+  iam_instance_profile        = "LabInstanceProfile"
 
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
 
@@ -49,7 +52,6 @@ resource "aws_instance" "k8s_server" {
     delete_on_termination = true
   }
 
-  # Script de inicialização seguro sem quebras
   user_data = <<-EOF
               #!/bin/bash
               echo "EC2 Started" > /tmp/status.txt
@@ -60,7 +62,7 @@ resource "aws_instance" "k8s_server" {
   }
 }
 
-# 5. Security Group com Prefix
+# 5. Security Group
 resource "aws_security_group" "k8s_sg" {
   name_prefix = "tc-k8s-sg-"
   description = "Security Group para K3s no AWS Academy"
