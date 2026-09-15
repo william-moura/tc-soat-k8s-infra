@@ -37,15 +37,27 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Cria/limpa uma pasta temporária na EC2
-            rm -rf ~/k8s-manifests && mkdir -p ~/k8s-manifests
-            
-            # 2. Clona o repositório ou baixa os arquivos usando o token do GitHub
-            git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ~/repo-temp
-            
-            # 3. Copia a pasta de manifestos para o diretório local
+            # 1. Instala dependências básicas (git) no Amazon Linux 2023
+            sudo dnf install -y git
+
+            # 2. Instala o K3s (se ainda não estiver instalado)
+            if ! command -v k3s &> /dev/null; then
+              echo "K3s não encontrado. Instalando..."
+              curl -sfL https://get.k3s.io | sh -
+              # Aguarda o serviço do K3s inicializar completamente
+              sleep 10
+            fi
+
+            # 3. Prepara a pasta de manifestos
+            rm -rf ~/k8s-manifests ~/repo-temp
+            mkdir -p ~/k8s-manifests
+
+            # 4. Clona o repositório
+            git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/william-moura/tc-soat-k8s-infra.git ~/repo-temp
+
+            # 5. Copia os manifestos e limpa a pasta temporária
             cp -r ~/repo-temp/k8s-manifests/* ~/k8s-manifests/
             rm -rf ~/repo-temp
 
-            # 4. Aplica os arquivos YAML diretamente pelo caminho local no K3s
+            # 6. Aplica os manifestos no K3s
             sudo k3s kubectl apply -f ~/k8s-manifests/
