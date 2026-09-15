@@ -19,3 +19,4 @@ stringData:
   DB_USERNAME: "dbadmin"
   DB_PASSWORD: "secretpassword"
   JWT_SECRET: "SEU_JWT_SECRET"
+  LOG_CHANNEL: "stderr"
