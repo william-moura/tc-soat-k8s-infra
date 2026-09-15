@@ -35,5 +35,6 @@ spec:
   ports:
   - port: 80
     targetPort: 80
+    nodePort: 31912
   selector:
     app: tc-app-laravel
