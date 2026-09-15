@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: datadog-secret
+  namespace: default
+type: Opaque
+data:  
+  api-key: 63b3a9215d4bc0c87fd8fc38209f869f
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: datadog-agent
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: datadog-agent
+  template:
+    metadata:
+      labels:
+        app: datadog-agent
+    spec:
+      containers:
+      - name: datadog-agent
+        image: gcr.io/datadoghq/agent:latest
+        env:
+        - name: DD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: api-key
+        - name: DD_SITE
+          value: "datadoghq.com" # Ou datadoghq.eu dependendo da sua conta
+        - name: DD_KUBERNETES_KUBELET_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: DD_LOGS_ENABLED
+          value: "true"
+        - name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+          value: "true"
+        - name: DD_APM_ENABLED
+          value: "true"
+        - name: DD_APM_NON_LOCAL_TRAFFIC
+          value: "true"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - name: dockersocket
+          mountPath: /var/run/docker.sock
+        - name: procdir
+          mountPath: /host/proc
+          readOnly: true
+        - name: cgroup
+          mountPath: /host/sys/fs/cgroup
+          readOnly: true
+        - name: pointdir
+          mountPath: /opt/datadog-agent/run
+      volumes:
+      - name: dockersocket
+        hostPath:
+          path: /var/run/k3s/containerd/containerd.sock
+      - name: procdir
+        hostPath:
+          path: /proc
+      - name: cgroup
+        hostPath:
+          path: /sys/fs/cgroup
+      - name: pointdir
+        hostPath:
+          path: /var/log/datadog-agent/run
