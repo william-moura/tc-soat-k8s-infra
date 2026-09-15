@@ -16,15 +16,13 @@ spec:
     spec:
       containers:
       - name: laravel
-        image: ghcr.io/william-moura/tech-challenge:master
+        image: ghcr.io/william-moura/tech-challenge:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
         envFrom:
         - configMapRef:
             name: tc-app-config
-        - secretRef:
-            name: tc-app-secret
 ---
 apiVersion: v1
 kind: Service
