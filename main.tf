@@ -16,14 +16,14 @@ data "aws_subnets" "default" {
   }
 }
 
-# 3. AMI Ubuntu Oficial Canonical
+# 3. AMI Ubuntu 22.04 LTS Homologada
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20*"]
   }
 
   filter {
@@ -32,30 +32,16 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# 4. Instância EC2
+# 4. Instância EC2 Limpa para AWS Academy
 resource "aws_instance" "k8s_server" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = "t3.micro"
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
   key_name                    = "vockey"
-  
-  # AQUI ESTÁ A CHAVE DO AWS ACADEMY:
   iam_instance_profile        = "LabInstanceProfile"
 
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
-
-  root_block_device {
-    volume_size           = 20
-    volume_type           = "gp2"
-    encrypted             = false
-    delete_on_termination = true
-  }
-
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "EC2 Started" > /tmp/status.txt
-              EOF
 
   tags = {
     Name = "tc-k8s-node"
