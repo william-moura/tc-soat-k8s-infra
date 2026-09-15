@@ -1,3 +1,5 @@
+# main.tf
+
 # 1. Obtém o Account ID REAL da conta do AWS Academy dinamicamente
 data "aws_caller_identity" "current" {}
 
@@ -6,7 +8,7 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# 3. Subnets válidas
+# 3. Subnets válidas (exclui us-east-1e para t3.small)
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -19,7 +21,7 @@ data "aws_subnets" "default" {
   }
 }
 
-# 4. AMI Amazon Linux 2023 Oficial (Obrigatório para o AWS Academy não derrubar)
+# 4. AMI Amazon Linux 2023 Oficial (Obrigatória no AWS Academy)
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -76,12 +78,12 @@ resource "aws_security_group" "k8s_sg" {
 
 # 6. EC2 Instância no AWS Academy
 resource "aws_instance" "k8s_server" {
-  ami                         = data.aws_ami.amazon_linux.id # USA AMAZON LINUX 2023!
+  ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t3.small"
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
   key_name                    = "vockey"
-  iam_instance_profile        = "LabInstanceProfile" # OBRIGATÓRIO NO ACADEMY
+  iam_instance_profile        = "LabInstanceProfile"
 
   vpc_security_group_ids = [aws_security_group.k8s_sg.id]
 
@@ -95,42 +97,4 @@ resource "aws_instance" "k8s_server" {
   tags = {
     Name = "tc-k8s-node"
   }
-}
-
-# ==========================================
-# RECURSOS DO API GATEWAY (COM ACCOUNT ID CORRETO)
-# ==========================================
-
-resource "aws_apigatewayv2_api" "auth_gw" {
-  name          = "tc-soat-api-gateway"
-  protocol_type = "HTTP"
-}
-
-resource "aws_apigatewayv2_stage" "default_stage" {
-  api_id      = aws_apigatewayv2_api.auth_gw.id
-  name        = "$default"
-  auto_deploy = true
-}
-
-resource "aws_apigatewayv2_integration" "lambda_auth_integration" {
-  api_id           = aws_apigatewayv2_api.auth_gw.id
-  integration_type = "AWS_PROXY"
-  
-  # AQUI: Usa o Account ID REAL obtido via data source em vez de 123456789012
-  integration_uri  = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:tc-soat-auth-lambda"
-  payload_format_version = "1.0"
-}
-
-resource "aws_apigatewayv2_route" "auth_route" {
-  api_id    = aws_apigatewayv2_api.auth_gw.id
-  route_key = "POST /auth"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_auth_integration.id}"
-}
-
-resource "aws_lambda_permission" "api_gw_lambda_permission" {
-  statement_id_prefix = "AllowExecutionFromAPIGateway"
-  action              = "lambda:InvokeFunction"
-  function_name       = "tc-soat-auth-lambda"
-  principal           = "apigateway.amazonaws.com"
-  source_arn          = "${aws_apigatewayv2_api.auth_gw.execution_arn}/*/*"
 }
