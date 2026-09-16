@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tc-swagger-ui
+  namespace: oficina-mecanica
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tc-swagger-ui
+  template:
+    metadata:
+      labels:
+        app: tc-swagger-ui
+    spec:
+      containers:
+      - name: swagger-ui
+        image: swaggerapi/swagger-ui:latest
+        ports:
+        - containerPort: 8080
+        env:
+        # Aponta para o JSON de documentação gerado pela sua API Laravel
+        - name: SWAGGER_JSON_URL
+          value: "http://tc-app-service/docs/api-docs.json"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tc-swagger-service
+  namespace: oficina-mecanica
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: tc-swagger-ui
