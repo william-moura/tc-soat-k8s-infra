@@ -1,22 +1,42 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: saga-oficina
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tc-app-config
+  name: app-config
+  namespace: saga-oficina
 data:
   APP_ENV: "production"
   APP_DEBUG: "false"
-  DB_CONNECTION: "mysql"
-  DB_PORT: "3306"
+  LOG_CHANNEL: "stderr"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_VHOST: "/"
+  OS_DB_CONNECTION: "pgsql"
+  OS_DB_HOST: "postgres-os"
+  OS_DB_PORT: "5432"
+  OS_DB_DATABASE: "tc_os"
+  BILLING_DB_CONNECTION: "mongodb"
+  BILLING_MONGODB_URI: "mongodb://mongodb-billing:27017"
+  BILLING_MONGODB_DATABASE: "tc_billing"
+  PRODUCTION_DB_CONNECTION: "mongodb"
+  PRODUCTION_MONGODB_URI: "mongodb://mongodb-production:27017"
+  PRODUCTION_MONGODB_DATABASE: "tc_production"
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tc-app-secret
+  name: app-secrets
+  namespace: saga-oficina
 type: Opaque
 stringData:
-  DB_HOST: "tc-mysql-service" # Preenchido automaticamente ou manualmente
-  DB_DATABASE: "techchallenge"
-  DB_USERNAME: "root"
-  DB_PASSWORD: "secretpassword"
-  JWT_SECRET: "SEU_JWT_SECRET"
-  LOG_CHANNEL: "stderr"
+  DB_USERNAME: "postgres"
+  DB_PASSWORD: "postgres_secret_password"
+  RABBITMQ_USER: "guest"
+  RABBITMQ_PASSWORD: "guest"
+  OS_APP_KEY: "base64:SUBSTITUA_PELA_APP_KEY_DO_OS"
+  BILLING_APP_KEY: "base64:SUBSTITUA_PELA_APP_KEY_DO_BILLING"
+  PRODUCTION_APP_KEY: "base64:SUBSTITUA_PELA_APP_KEY_DO_PRODUCTION"

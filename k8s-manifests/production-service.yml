@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-api
+  namespace: saga-oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing-api
+  template:
+    metadata:
+      labels:
+        app: billing-api
+    spec:
+      containers:
+        - name: billing-api
+          image: seu-usuario/tc-billing-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000 # Ajuste para 80 se o Dockerfile usar Nginx
+          env:
+            - name: DD_SERVICE
+              value: "tc-billing-service"
+            - name: DD_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: APP_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: APP_DEBUG
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_DEBUG } }
+            - name: LOG_CHANNEL
+              valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
+            - name: APP_KEY
+              valueFrom: { secretKeyRef: { name: app-secrets, key: BILLING_APP_KEY } }
+            - name: DB_CONNECTION
+              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_DB_CONNECTION } }
+            - name: MONGODB_URI
+              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_URI } }
+            - name: MONGODB_DATABASE
+              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_DATABASE } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_VHOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_VHOST } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-api
+  namespace: saga-oficina
+spec:
+  selector:
+    app: billing-api
+  ports:
+    - port: 80
+      targetPort: 8000 # Deve corresponder ao containerPort acima
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-worker
+  namespace: saga-oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: billing-worker
+  template:
+    metadata:
+      labels:
+        app: billing-worker
+    spec:
+      containers:
+        - name: billing-worker
+          image: seu-usuario/tc-billing-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["php", "artisan", "rabbitmq:consume"] # Confirme a assinatura em app/Presentation/Console/Commands/
+          env:
+            - name: DD_SERVICE
+              value: "tc-billing-worker"
+            - name: APP_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: LOG_CHANNEL
+              valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
+            - name: APP_KEY
+              valueFrom: { secretKeyRef: { name: app-secrets, key: BILLING_APP_KEY } }
+            - name: DB_CONNECTION
+              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_DB_CONNECTION } }
+            - name: MONGODB_URI
+              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_URI } }
+            - name: MONGODB_DATABASE
+              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_DATABASE } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_VHOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_VHOST } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: billing-api-hpa
+  namespace: saga-oficina
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: billing-api
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
