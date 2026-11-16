@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: billing-api
-          image: seu-usuario/tc-billing-service:latest
+          image: tc-billing-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000 # Ajuste para 80 se o Dockerfile usar Nginx
