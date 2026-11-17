@@ -1,0 +1,213 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: os-api
+  namespace: saga-oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: os-api
+  template:
+    metadata:
+      labels:
+        app: os-api
+    spec:
+      containers:
+        - name: os-api
+          image: tc-os-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000 # Ajuste para 80 se o Dockerfile usar Nginx/Apache
+          env:
+            - name: DD_SERVICE
+              value: "tc-os-service"
+            - name: DD_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: APP_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: APP_DEBUG
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_DEBUG } }
+            - name: LOG_CHANNEL
+              valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
+            - name: APP_KEY
+              valueFrom: { secretKeyRef: { name: app-secrets, key: OS_APP_KEY } }
+            - name: DB_CONNECTION
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_CONNECTION } }
+            - name: DB_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_HOST } }
+            - name: DB_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_PORT } }
+            - name: DB_DATABASE
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_DATABASE } }
+            - name: DB_USERNAME
+              valueFrom: { secretKeyRef: { name: app-secrets, key: DB_USERNAME } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: DB_PASSWORD } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_VHOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_VHOST } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: os-api
+  namespace: saga-oficina
+spec:
+  selector:
+    app: os-api
+  ports:
+    - port: 80
+      targetPort: 8000 # Deve corresponder ao containerPort acima
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: os-worker-repair-completed
+  namespace: saga-oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: os-worker-repair-completed
+  template:
+    metadata:
+      labels:
+        app: os-worker-repair-completed
+    spec:
+      containers:
+        - name: os-worker-repair-completed
+          image: tc-os-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["php", "artisan", "rabbitmq:consume", "repair-completed"] # Confirme o comando exato no docker-compose.yml
+          env:
+            - name: DD_SERVICE
+              value: "tc-os-worker-repair-completed"
+            - name: APP_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: LOG_CHANNEL
+              valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
+            - name: APP_KEY
+              valueFrom: { secretKeyRef: { name: app-secrets, key: OS_APP_KEY } }
+            - name: DB_CONNECTION
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_CONNECTION } }
+            - name: DB_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_HOST } }
+            - name: DB_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_PORT } }
+            - name: DB_DATABASE
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_DATABASE } }
+            - name: DB_USERNAME
+              valueFrom: { secretKeyRef: { name: app-secrets, key: DB_USERNAME } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: DB_PASSWORD } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_VHOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_VHOST } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: os-worker-payment-failed
+  namespace: saga-oficina
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: os-worker-payment-failed
+  template:
+    metadata:
+      labels:
+        app: os-worker-payment-failed
+    spec:
+      containers:
+        - name: os-worker-payment-failed
+          image: tc-os-service:latest
+          imagePullPolicy: IfNotPresent
+          command: ["php", "artisan", "rabbitmq:consume", "payment-failed"] # Confirme o comando exato no docker-compose.yml
+          env:
+            - name: DD_SERVICE
+              value: "tc-os-worker-payment-failed"
+            - name: APP_ENV
+              valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
+            - name: LOG_CHANNEL
+              valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
+            - name: APP_KEY
+              valueFrom: { secretKeyRef: { name: app-secrets, key: OS_APP_KEY } }
+            - name: DB_CONNECTION
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_CONNECTION } }
+            - name: DB_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_HOST } }
+            - name: DB_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_PORT } }
+            - name: DB_DATABASE
+              valueFrom: { configMapKeyRef: { name: app-config, key: OS_DB_DATABASE } }
+            - name: DB_USERNAME
+              valueFrom: { secretKeyRef: { name: app-secrets, key: DB_USERNAME } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: DB_PASSWORD } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_VHOST
+              valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_VHOST } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: os-api-hpa
+  namespace: saga-oficina
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: os-api
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
