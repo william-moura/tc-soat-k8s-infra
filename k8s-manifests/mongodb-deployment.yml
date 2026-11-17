@@ -20,8 +20,8 @@ spec:
             - containerPort: 27017
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: 30m
+              memory: 64Mi
             limits:
               cpu: "500m"
               memory: "512Mi"
@@ -60,8 +60,8 @@ spec:
             - containerPort: 27017
           resources:
             requests:
-              cpu: "100m"
-              memory: "256Mi"
+              cpu: 30m
+              memory: 64Mi
             limits:
               cpu: "500m"
               memory: "512Mi"

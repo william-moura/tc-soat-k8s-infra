@@ -56,8 +56,8 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
           resources:
             requests:
-              cpu: "50m"
-              memory: "64Mi"
+              cpu: 30m
+              memory: 64Mi
             limits:
               cpu: "100m"
               memory: "128Mi"
@@ -127,8 +127,8 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: 30m
+              memory: 64Mi
             limits:
               cpu: "300m"
               memory: "256Mi"
@@ -186,8 +186,8 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: 30m
+              memory: 64Mi
             limits:
               cpu: "300m"
               memory: "256Mi"
