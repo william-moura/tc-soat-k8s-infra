@@ -5,6 +5,8 @@ metadata:
   namespace: saga-oficina
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: production-api
@@ -75,6 +77,8 @@ metadata:
   namespace: saga-oficina
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: production-worker
