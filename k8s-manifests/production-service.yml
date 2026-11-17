@@ -115,11 +115,11 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: RABBITMQ_PASSWORD } }
           resources:
             requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
               cpu: "100m"
               memory: "128Mi"
-            limits:
-              cpu: "300m"
-              memory: "256Mi"
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
