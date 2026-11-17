@@ -12,9 +12,9 @@ jobs:
       - name: Deploy via SSH to k3s VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
+          host: ${{ secrets.HOSTINGER_IP }}
+          username: root
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.PORT || 22 }}
           script_stop: true
           script: |
