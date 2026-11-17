@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: billing-api
+  name: production-api
   namespace: saga-oficina
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: billing-api
+      app: production-api
   template:
     metadata:
       labels:
-        app: billing-api
+        app: production-api
     spec:
       containers:
-        - name: billing-api
-          image: tc-billing-service:latest
+        - name: production-api
+          image: tc-production-service:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8000 # Ajuste para 80 se o Dockerfile usar Nginx
+            - containerPort: 8000 # Ajuste para 80 se o Dockerfile usar Nginx/Apache
           env:
             - name: DD_SERVICE
-              value: "tc-billing-service"
+              value: "tc-production-service"
             - name: DD_ENV
               valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
             - name: APP_ENV
@@ -31,13 +31,13 @@ spec:
             - name: LOG_CHANNEL
               valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
             - name: APP_KEY
-              valueFrom: { secretKeyRef: { name: app-secrets, key: BILLING_APP_KEY } }
+              valueFrom: { secretKeyRef: { name: app-secrets, key: PRODUCTION_APP_KEY } }
             - name: DB_CONNECTION
-              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_DB_CONNECTION } }
+              valueFrom: { configMapKeyRef: { name: app-config, key: PRODUCTION_DB_CONNECTION } }
             - name: MONGODB_URI
-              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_URI } }
+              valueFrom: { configMapKeyRef: { name: app-config, key: PRODUCTION_MONGODB_URI } }
             - name: MONGODB_DATABASE
-              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_DATABASE } }
+              valueFrom: { configMapKeyRef: { name: app-config, key: PRODUCTION_MONGODB_DATABASE } }
             - name: RABBITMQ_HOST
               valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
             - name: RABBITMQ_PORT
@@ -59,11 +59,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: billing-api
+  name: production-api
   namespace: saga-oficina
 spec:
   selector:
-    app: billing-api
+    app: production-api
   ports:
     - port: 80
       targetPort: 8000 # Deve corresponder ao containerPort acima
@@ -71,38 +71,38 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: billing-worker
+  name: production-worker
   namespace: saga-oficina
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: billing-worker
+      app: production-worker
   template:
     metadata:
       labels:
-        app: billing-worker
+        app: production-worker
     spec:
       containers:
-        - name: billing-worker
-          image: seu-usuario/tc-billing-service:latest
+        - name: production-worker
+          image: tc-production-service:latest
           imagePullPolicy: IfNotPresent
-          command: ["php", "artisan", "rabbitmq:consume"] # Confirme a assinatura em app/Presentation/Console/Commands/
+          command: ["php", "artisan", "production:consume", "--queue=all"]
           env:
             - name: DD_SERVICE
-              value: "tc-billing-worker"
+              value: "tc-production-worker"
             - name: APP_ENV
               valueFrom: { configMapKeyRef: { name: app-config, key: APP_ENV } }
             - name: LOG_CHANNEL
               valueFrom: { configMapKeyRef: { name: app-config, key: LOG_CHANNEL } }
             - name: APP_KEY
-              valueFrom: { secretKeyRef: { name: app-secrets, key: BILLING_APP_KEY } }
+              valueFrom: { secretKeyRef: { name: app-secrets, key: PRODUCTION_APP_KEY } }
             - name: DB_CONNECTION
-              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_DB_CONNECTION } }
+              valueFrom: { configMapKeyRef: { name: app-config, key: PRODUCTION_DB_CONNECTION } }
             - name: MONGODB_URI
-              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_URI } }
+              valueFrom: { configMapKeyRef: { name: app-config, key: PRODUCTION_MONGODB_URI } }
             - name: MONGODB_DATABASE
-              valueFrom: { configMapKeyRef: { name: app-config, key: BILLING_MONGODB_DATABASE } }
+              valueFrom: { configMapKeyRef: { name: app-config, key: PRODUCTION_MONGODB_DATABASE } }
             - name: RABBITMQ_HOST
               valueFrom: { configMapKeyRef: { name: app-config, key: RABBITMQ_HOST } }
             - name: RABBITMQ_PORT
@@ -124,13 +124,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: billing-api-hpa
+  name: production-api-hpa
   namespace: saga-oficina
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: billing-api
+    name: production-api
   minReplicas: 1
   maxReplicas: 4
   metrics:

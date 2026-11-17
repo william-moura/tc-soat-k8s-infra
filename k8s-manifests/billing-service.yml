@@ -85,9 +85,9 @@ spec:
     spec:
       containers:
         - name: billing-worker
-          image: seu-usuario/tc-billing-service:latest
+          image: tc-billing-service:latest
           imagePullPolicy: IfNotPresent
-          command: ["php", "artisan", "rabbitmq:consume"] # Confirme a assinatura em app/Presentation/Console/Commands/
+          command: ["php", "artisan", "billing:consume"]
           env:
             - name: DD_SERVICE
               value: "tc-billing-worker"
